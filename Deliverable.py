@@ -5,6 +5,8 @@ from pygameWindow_Del03 import PYGAME_WINDOW
 from constants import *
 import numpy as np
 import pickle
+import os
+import shutil
 
 class Deliverable:
     def __init__(self):
@@ -18,6 +20,7 @@ class Deliverable:
         self.currentNumberOfHands = 0
         self.gestureData = np.zeros((5,4,6),dtype='f')
         self.gestureNum = 0
+        self.Clear_User_Data()
 
     def Scale_Val(self, val, leapMin, leapMax, pygameMin, pygameMax):
         leapRange = leapMax - leapMin
@@ -103,3 +106,7 @@ class Deliverable:
         pickle.dump(self.gestureData, pickle_out)
         pickle_out.close()
         self.gestureNum += 1
+
+    def Clear_User_Data(self):
+        shutil.rmtree('userData')
+        os.mkdir('userData')
