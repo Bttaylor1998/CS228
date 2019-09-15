@@ -3,6 +3,8 @@ sys.path.insert(0, '..')
 import Leap
 from pygameWindow_Del03 import PYGAME_WINDOW
 from constants import *
+import numpy as np
+import pickle
 
 class Deliverable:
     def __init__(self):
@@ -12,6 +14,10 @@ class Deliverable:
         self.yMin = 100.0
         self.yMax = -100.0
         self.controller = Leap.Controller()
+        self.previousNumberOfHands = 0
+        self.currentNumberOfHands = 0
+        self.gestureData = np.zeros((5,4,6),dtype='f')
+        self.gestureNum = 0
 
     def Scale_Val(self, val, leapMin, leapMax, pygameMin, pygameMax):
         leapRange = leapMax - leapMin
@@ -28,12 +34,16 @@ class Deliverable:
         fingers = hand.fingers
         for fing in fingers:
             self.Handle_Finger(fing)
+        if self.Recording_Is_Ending():
+            print(self.gestureData)
+            self.Save_Gesture()
 
     def Handle_Finger(self, finger):
-        for b in range(4):
-            self.Handle_Bone(finger.bone(b), b)
+        for b in range(5):
+            for bone in range(4):
+                self.Handle_Bone(finger.bone(bone), bone, b)
 
-    def Handle_Bone(self, bone, b):
+    def Handle_Bone(self, bone, boneNum, b):
         base = bone.prev_joint
         tip = bone.next_joint
 
@@ -45,9 +55,17 @@ class Deliverable:
         xTip = self.Scale_Val(xTip, self.xMin, self.xMax, 0, pygameWindowWidth)
         yTip = self.Scale_Val(yTip, self.yMin, self.yMax, 0, pygameWindowHeight)
 
-        if(self.numberOfHands == 1):
+        if(self.currentNumberOfHands == 1):
             self.pygameWindow.Draw_Line((124,252,0), xBase, yBase, xTip, yTip, b)
-        elif(self.numberOfHands == 2):
+            if self.Recording_Is_Ending():
+                self.gestureData[b, boneNum, 0] = base[0]
+                self.gestureData[b, boneNum, 1] = base[1]
+                self.gestureData[b, boneNum, 2] = base[2]
+                self.gestureData[b, boneNum, 3] = tip[0]
+                self.gestureData[b, boneNum, 4] = tip[1]
+                self.gestureData[b, boneNum, 5] = tip[2]
+            
+        elif(self.currentNumberOfHands == 2):
             self.pygameWindow.Draw_Line((255,0,0), xBase, yBase, xTip, yTip, b)
 
     def Handle_Vector_From_Leap(self, v):
@@ -70,7 +88,18 @@ class Deliverable:
     def Run_Once(self):
         self.pygameWindow.Prepare()
         frame = self.controller.frame()
-        self.numberOfHands  = len(frame.hands)
-        if (self.numberOfHands > 0):
+        self.currentNumberOfHands = len(frame.hands)
+        if (self.currentNumberOfHands > 0):
             self.Handle_Frame(frame)
         self.pygameWindow.Reveal()
+        self.previousNumberOfHands = self.currentNumberOfHands
+
+    def Recording_Is_Ending(self):
+        if(self.currentNumberOfHands == 1 and self.previousNumberOfHands == 2):
+            return True
+
+    def Save_Gesture(self):
+        pickle_out = open("userData/gesture" + str(self.gestureNum) + ".p", "wb")
+        pickle.dump(self.gestureData, pickle_out)
+        pickle_out.close()
+        self.gestureNum += 1
