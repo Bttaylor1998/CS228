@@ -11,10 +11,10 @@ import shutil
 class Deliverable:
     def __init__(self):
         self.pygameWindow = PYGAME_WINDOW()
-        self.xMin = 100.0
-        self.xMax = -100.0
-        self.yMin = 100.0
-        self.yMax = -100.0
+        self.xMin = 1000.0
+        self.xMax = -1000.0
+        self.yMin = 1000.0
+        self.yMax = -1000.0
         self.controller = Leap.Controller()
         self.previousNumberOfHands = 0
         self.currentNumberOfHands = 0
@@ -36,17 +36,17 @@ class Deliverable:
         hand = frame.hands[0]
         fingers = hand.fingers
         for fing in fingers:
-            self.Handle_Finger(fing)
+            idNum = fing.type
+            self.Handle_Finger(fing, idNum)
         if self.Recording_Is_Ending():
             print(self.gestureData)
             self.Save_Gesture()
 
-    def Handle_Finger(self, finger):
-        for b in range(5):
-            for bone in range(4):
-                self.Handle_Bone(finger.bone(bone), bone, b)
+    def Handle_Finger(self, finger, i):
+        for j in range(4):
+            self.Handle_Bone(finger.bone(j), i, j)
 
-    def Handle_Bone(self, bone, boneNum, b):
+    def Handle_Bone(self, bone, i, j):
         base = bone.prev_joint
         tip = bone.next_joint
 
@@ -59,17 +59,18 @@ class Deliverable:
         yTip = self.Scale_Val(yTip, self.yMin, self.yMax, 0, pygameWindowHeight)
 
         if(self.currentNumberOfHands == 1):
-            self.pygameWindow.Draw_Line((124,252,0), xBase, yBase, xTip, yTip, b)
+            self.pygameWindow.Draw_Line((124,252,0), xBase, yBase, xTip, yTip, i)
             if self.Recording_Is_Ending():
-                self.gestureData[b, boneNum, 0] = base[0]
-                self.gestureData[b, boneNum, 1] = base[1]
-                self.gestureData[b, boneNum, 2] = base[2]
-                self.gestureData[b, boneNum, 3] = tip[0]
-                self.gestureData[b, boneNum, 4] = tip[1]
-                self.gestureData[b, boneNum, 5] = tip[2]
+                print(base.x, base.y, base.z, tip.x, tip.y, tip.z)
+                self.gestureData[i,j,0] = base.x
+                self.gestureData[i,j,1] = base.y
+                self.gestureData[i,j,2] = base.z
+                self.gestureData[i,j,3] = tip.x
+                self.gestureData[i,j,4] = tip.y
+                self.gestureData[i,j,5] = tip.z
             
         elif(self.currentNumberOfHands == 2):
-            self.pygameWindow.Draw_Line((255,0,0), xBase, yBase, xTip, yTip, b)
+            self.pygameWindow.Draw_Line((255,0,0), xBase, yBase, xTip, yTip, i)
 
     def Handle_Vector_From_Leap(self, v):
         x = v[0]

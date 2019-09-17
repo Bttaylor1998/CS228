@@ -15,4 +15,4 @@ class PYGAME_WINDOW:
         pygame.draw.circle(self.screen, (0,0,0), (x,y), 10, 0)
 
     def Draw_Line(self, color, xBase, yBase, xTip, yTip, width):
-        pygame.draw.line(self.screen, color, (xBase,yBase), (xTip,yTip), 5 - width)
+        pygame.draw.line(self.screen, color, (xBase,yBase), (xTip,yTip), 1)
